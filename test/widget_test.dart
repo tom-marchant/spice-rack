@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:spice_rack/main.dart';
+import 'package:spice_rack/widgets.dart';
 
 void main() {
   testWidgets('Loads the app', (WidgetTester tester) async {
@@ -21,7 +22,7 @@ void main() {
   });
 
   testWidgets('Shows full list of available consumables', (WidgetTester tester) async {
-    await tester.pumpWidget(Consumables());
+    await tester.pumpWidget(MaterialApp(home: Consumables()));
 
     expect(find.byType(ListView), findsOneWidget);
   });

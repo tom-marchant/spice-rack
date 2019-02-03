@@ -1,0 +1,37 @@
+{
+  "consumables": [
+    {
+      "name": "Ground Coriander",
+      "userData": {
+        "level": "full"
+      }
+    },
+    {
+      "name": "Marjoram"
+    },
+    {
+      "name": "Cumin Seeds",
+      "userData": {
+        "level": "low"
+      }
+    },
+    {
+      "name": "Chill Powder"
+    },
+    {
+      "name": "Chill Flakes"
+    },
+    {
+      "name": "Cajun Spices"
+    },
+    {
+      "name": "Chinese Five-Spice"
+    },
+    {
+      "name": "Mixed Herbs"
+    },
+    {
+      "name": "Ground Cumin"
+    }
+  ]
+}

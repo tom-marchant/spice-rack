@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:spice_rack/providers.dart';
 import 'package:spice_rack/domain.dart';
+import 'package:spice_rack/repositories.dart';
 
 void main() {
   final _storedConsumables = [
@@ -12,7 +13,7 @@ void main() {
     StoredConsumable("Cajun", null)
   ];
 
-  final _source = BasicConsumablesSource(_storedConsumables);
+  final _source = BasicConsumablesRepository(_storedConsumables);
   final _provider = ConsumablesProvider(_source);
 
   test('Provides list of consumables in alphabetical order', () {

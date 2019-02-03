@@ -1,50 +1,28 @@
-import 'dart:io';
-
-import 'package:path_provider/path_provider.dart';
-
-abstract class ConsumablesSource {
-  List<StoredConsumable> get();
-}
-
-class BasicConsumablesSource extends ConsumablesSource {
-  final List<StoredConsumable> _consumables;
-
-  BasicConsumablesSource(this._consumables);
-
-  @override
-  List<StoredConsumable> get() {
-    return _consumables;
-  }
-}
-
-class FileSystemConsumablesSource extends ConsumablesSource {
-
-  Future<String> get _localPath async {
-    final directory = await getApplicationDocumentsDirectory();
-    return directory.path;
-  }
-
-  Future<File> get _localFile async {
-    final path = await _localPath;
-    return File('$path/consumables.json');
-  }
-
-  @override
-  List<StoredConsumable> get() {
-    return null;
-  }
-}
-
 class StoredConsumable {
   final String name;
   StoredConsumableUserData userData;
 
   StoredConsumable(this.name, this.userData);
+
+  StoredConsumable.fromJson(Map<String, dynamic> json)
+      : name = json['name'],
+        userData = json['userData'] != null ? StoredConsumableUserData.fromJson(json['userData']) : null;
+
+  Map<String, dynamic> toJson() => {
+        'name': name,
+        'userData': (userData != null) ? userData.toJson() : null,
+      };
 }
 
 class StoredConsumableUserData {
   Level level;
+
   StoredConsumableUserData(this.level);
+
+  StoredConsumableUserData.fromJson(Map<String, dynamic> json)
+      : level = Level.values.firstWhere((e) => e.toString() == 'Level.' + json['level']);
+
+  Map<String, dynamic> toJson() => {'level': this.level.toString().substring("Level.".length) };
 }
 
 class Consumable implements Comparable<Consumable> {
@@ -71,6 +49,7 @@ class SelectedConsumable implements Comparable<SelectedConsumable> {
   Level level;
 
   SelectedConsumable(this.consumable, this.level);
+
   SelectedConsumable.full(Consumable consumable) : this(consumable, Level.full);
 
   @override

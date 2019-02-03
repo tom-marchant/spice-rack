@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'data.dart';
 import 'domain.dart';
 import 'providers.dart';
-
-final _consumablesSource = BasicConsumablesSource(storedConsumables);
-final _consumablesProvider = ConsumablesProvider(_consumablesSource);
 
 final _biggerFont = const TextStyle(fontSize: 18.0);
 
@@ -17,6 +13,9 @@ void showAddView(BuildContext context, Widget widget) {
 }
 
 class Consumables extends StatefulWidget {
+  final ConsumablesProvider _consumablesProvider;
+  Consumables(this._consumablesProvider);
+
   @override
   ConsumablesState createState() => new ConsumablesState();
 // TODO Add build() method
@@ -51,9 +50,9 @@ class ConsumablesState extends State<Consumables> {
     print("Building consumables list. _searchText=$_searchText");
 
     if (_searchText == "") {
-      consumables = _consumablesProvider.getAll();
+      consumables = this.widget._consumablesProvider.getAll();
     } else {
-      consumables = _consumablesProvider.getFiltered(_searchText);
+      consumables = this.widget._consumablesProvider.getFiltered(_searchText);
     }
 
     return ListView.builder(
@@ -80,22 +79,26 @@ class ConsumablesState extends State<Consumables> {
           style: _biggerFont,
         ),
         leading: Checkbox(
-            value: _consumablesProvider.isSelected(_consumable),
+            value: this.widget._consumablesProvider.isSelected(_consumable),
             onChanged: (selected) {
               setState(() {
-                _consumablesProvider.setSelected(_consumable, selected);
+                this.widget._consumablesProvider.setSelected(_consumable, selected);
               });
             }));
   }
 }
 
 class SelectedConsumables extends StatefulWidget {
+  final ConsumablesProvider _consumablesProvider;
+  const SelectedConsumables(this._consumablesProvider);
+
   @override
   SelectedConsumablesState createState() => new SelectedConsumablesState();
 // TODO Add build() method
 }
 
 class SelectedConsumablesState extends State<SelectedConsumables> {
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -104,14 +107,14 @@ class SelectedConsumablesState extends State<SelectedConsumables> {
       ),
       body: _buildList(),
       floatingActionButton: FloatingActionButton(
-          onPressed: () => showAddView(context, Consumables()),
+          onPressed: () => showAddView(context, Consumables(this.widget._consumablesProvider)),
           child: Icon(Icons.add)),
     );
   }
 
   Widget _buildList() {
     List<SelectedConsumable> selectedConsumables =
-        _consumablesProvider.getSelected();
+        this.widget._consumablesProvider.getSelected();
 
     return ListView.builder(
         padding: const EdgeInsets.all(16.0),
@@ -134,7 +137,7 @@ class SelectedConsumablesState extends State<SelectedConsumables> {
         leading: getIcon(_selectedConsumable),
         onTap: () {
           setState(() {
-            _selectedConsumable.cycleLevel();
+            this.widget._consumablesProvider.cycleLevel(_selectedConsumable);
           });
         });
   }
@@ -148,5 +151,6 @@ class SelectedConsumablesState extends State<SelectedConsumables> {
       case Level.low:
         return Icon(Icons.brightness_3, color: Colors.red);
     }
+    return null;
   }
 }

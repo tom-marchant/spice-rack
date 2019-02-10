@@ -1,32 +1,35 @@
+import 'dart:collection';
+
 import 'domain.dart';
 import 'repositories.dart';
 
 class ConsumablesProvider {
   ConsumablesRepository _repository;
-  List<Consumable> _allConsumables;
+  SplayTreeMap<String, Consumable> _allConsumables;
   List<SelectedConsumable> _selectedConsumables;
 
   ConsumablesProvider(this._repository) {
     List<StoredConsumable> storedConsumables = this._repository.get();
 
-    _allConsumables = storedConsumables
+    List<Consumable> _rawConsumables = storedConsumables
         .map((storedConsumable) => Consumable(storedConsumable.name))
-        .toList()
-          ..sort();
+        .toList();
+
+    _allConsumables = SplayTreeMap.fromIterables(
+        _rawConsumables.map((c) => c.name).toList(), _rawConsumables);
 
     _selectedConsumables = storedConsumables
         .where((storedConsumable) => storedConsumable.userData != null)
         .toList()
         .map((storedConsumable) {
-      var consumable = _allConsumables
-          .firstWhere((consumable) => consumable.name == storedConsumable.name);
+      var consumable = _allConsumables[storedConsumable.name];
       return SelectedConsumable(consumable, storedConsumable.userData.level);
     }).toList()
           ..sort();
   }
 
   List<Consumable> getAll() {
-    return _allConsumables;
+    return _allConsumables.values.toList();
   }
 
   List<SelectedConsumable> getSelected() {
@@ -35,7 +38,7 @@ class ConsumablesProvider {
 
   List<Consumable> getFiltered(String filter) {
     filter = filter.toLowerCase();
-    return _allConsumables
+    return _allConsumables.values
         .where((consumable) => consumable.name.toLowerCase().contains(filter))
         .toList();
   }
@@ -70,7 +73,7 @@ class ConsumablesProvider {
   }
 
   List<StoredConsumable> buildStoredConsumables() {
-    return _allConsumables.map((consumable) {
+    return _allConsumables.values.map((consumable) {
       StoredConsumableUserData userData;
 
       if (isSelected(consumable)) {
@@ -82,5 +85,12 @@ class ConsumablesProvider {
 
       return StoredConsumable(consumable.name, userData);
     }).toList();
+  }
+
+  void add(String name) {
+    var newConsumable = Consumable(name);
+    _allConsumables.putIfAbsent(name, () => newConsumable);
+    _selectedConsumables.add(SelectedConsumable.full(newConsumable));
+    this._repository.save(buildStoredConsumables());
   }
 }

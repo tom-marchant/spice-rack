@@ -1,19 +1,80 @@
 import 'package:flutter/material.dart';
-
+import 'package:flutter/services.dart';
+import 'package:strings/strings.dart';
 import 'domain.dart';
 import 'providers.dart';
 
 final _biggerFont = const TextStyle(fontSize: 18.0);
+final _biggerBlackText = const TextStyle(fontSize: 18.0, color: Colors.black);
 
-void showAddView(BuildContext context, Widget widget) {
+void pushView(BuildContext context, Widget widget) {
   Navigator.push(context,
       MaterialPageRoute<void>(builder: (BuildContext context) {
     return widget;
   }));
 }
 
+class AddNewConsumable extends StatefulWidget {
+  final ConsumablesProvider _consumablesProvider;
+
+  AddNewConsumable(this._consumablesProvider);
+
+  @override
+  AddNewConsumableState createState() => new AddNewConsumableState();
+}
+
+class AddNewConsumableState extends State<AddNewConsumable> {
+  String _consumableName = "";
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Add new')),
+      body: Column(children: [
+        Padding(
+          padding: EdgeInsets.all(16.0),
+          child: TextField(
+              decoration: InputDecoration(labelText: 'Name'),
+              style: _biggerBlackText,
+              onChanged: (text) => setState(() => this._consumableName = text)),
+        ),
+        Padding(
+          padding: EdgeInsets.all(16.0),
+          child: RaisedButton(
+            onPressed:
+                (_consumableName.isNotEmpty) ? () => _addNewConsumable() : null,
+            child: Text('ADD', style: _biggerFont),
+          ),
+        )
+      ]),
+    );
+  }
+
+  _addNewConsumable() {
+    Consumable preExistingConsumable = this
+        .widget
+        ._consumablesProvider
+        .getAll()
+        .firstWhere(
+            (consumable) => consumable.name.toLowerCase() == _consumableName,
+            orElse: () => null);
+
+    if (preExistingConsumable != null) {
+      Scaffold.of(context).showSnackBar(new SnackBar(
+        content: new Text("This spice already exists!"),
+      ));
+    } else {
+      this
+          .widget
+          ._consumablesProvider.add(camelize(_consumableName));
+      Navigator.pop(context);
+    }
+  }
+}
+
 class Consumables extends StatefulWidget {
   final ConsumablesProvider _consumablesProvider;
+
   Consumables(this._consumablesProvider);
 
   @override
@@ -22,26 +83,28 @@ class Consumables extends StatefulWidget {
 }
 
 class ConsumablesState extends State<Consumables> {
-
   String _searchText = "";
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Add or Remove Spices')),
-      body: Column(children: [
-        Padding(
-            padding: EdgeInsets.all(16.0),
-            child: TextField(
-              decoration:
-              InputDecoration(icon: Icon(Icons.search), hintText: 'Search...'),
-              onChanged: ((searchText) {
-                setSearchText(searchText);
-              }),
-            )),
-        Expanded(child: _buildList())
-      ]),
-    );
+        appBar: AppBar(title: Text('Add or Remove Spices')),
+        body: Column(children: [
+          Padding(
+              padding: EdgeInsets.all(16.0),
+              child: TextField(
+                decoration: InputDecoration(
+                    icon: Icon(Icons.search), hintText: 'Search...'),
+                onChanged: ((searchText) {
+                  setSearchText(searchText);
+                }),
+              )),
+          Expanded(child: _buildList())
+        ]),
+        floatingActionButton: FloatingActionButton(
+            child: Icon(Icons.add),
+            onPressed: () => pushView(
+                context, AddNewConsumable(this.widget._consumablesProvider))));
   }
 
   Widget _buildList() {
@@ -82,7 +145,10 @@ class ConsumablesState extends State<Consumables> {
             value: this.widget._consumablesProvider.isSelected(_consumable),
             onChanged: (selected) {
               setState(() {
-                this.widget._consumablesProvider.setSelected(_consumable, selected);
+                this
+                    .widget
+                    ._consumablesProvider
+                    .setSelected(_consumable, selected);
               });
             }));
   }
@@ -90,6 +156,7 @@ class ConsumablesState extends State<Consumables> {
 
 class SelectedConsumables extends StatefulWidget {
   final ConsumablesProvider _consumablesProvider;
+
   const SelectedConsumables(this._consumablesProvider);
 
   @override
@@ -98,7 +165,6 @@ class SelectedConsumables extends StatefulWidget {
 }
 
 class SelectedConsumablesState extends State<SelectedConsumables> {
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -107,7 +173,8 @@ class SelectedConsumablesState extends State<SelectedConsumables> {
       ),
       body: _buildList(),
       floatingActionButton: FloatingActionButton(
-          onPressed: () => showAddView(context, Consumables(this.widget._consumablesProvider)),
+          onPressed: () =>
+              pushView(context, Consumables(this.widget._consumablesProvider)),
           child: Icon(Icons.add)),
     );
   }

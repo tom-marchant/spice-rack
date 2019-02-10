@@ -93,4 +93,14 @@ class ConsumablesProvider {
     _selectedConsumables.add(SelectedConsumable.full(newConsumable));
     this._repository.save(buildStoredConsumables());
   }
+
+  void remove(Consumable consumable) {
+    _selectedConsumables = _selectedConsumables
+        .where((selectedConsumable) =>
+    selectedConsumable.consumable != consumable)
+        .toList();
+
+    _allConsumables.remove(consumable.name);
+    this._repository.save(buildStoredConsumables());
+  }
 }

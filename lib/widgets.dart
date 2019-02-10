@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:strings/strings.dart';
+
 import 'domain.dart';
 import 'providers.dart';
 
@@ -10,8 +10,8 @@ final _biggerBlackText = const TextStyle(fontSize: 18.0, color: Colors.black);
 void pushView(BuildContext context, Widget widget) {
   Navigator.push(context,
       MaterialPageRoute<void>(builder: (BuildContext context) {
-    return widget;
-  }));
+        return widget;
+      }));
 }
 
 class AddNewConsumable extends StatefulWidget {
@@ -29,45 +29,48 @@ class AddNewConsumableState extends State<AddNewConsumable> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Add new')),
-      body: Column(children: [
-        Padding(
-          padding: EdgeInsets.all(16.0),
-          child: TextField(
-              decoration: InputDecoration(labelText: 'Name'),
-              style: _biggerBlackText,
-              onChanged: (text) => setState(() => this._consumableName = text)),
-        ),
-        Padding(
-          padding: EdgeInsets.all(16.0),
-          child: RaisedButton(
-            onPressed:
-                (_consumableName.isNotEmpty) ? () => _addNewConsumable() : null,
-            child: Text('ADD', style: _biggerFont),
-          ),
-        )
-      ]),
-    );
+        appBar: AppBar(title: Text('Add new')),
+        body: Builder(
+            builder: (BuildContext context) {
+              return Column(children: [
+                Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: TextField(
+                      decoration: InputDecoration(labelText: 'Name'),
+                      style: _biggerBlackText,
+                      onChanged: (text) =>
+                          setState(() => this._consumableName = text)),
+                ),
+                Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: RaisedButton(
+                    onPressed:
+                    (_consumableName.isNotEmpty)
+                        ? () => _addNewConsumable(context)
+                        : null,
+                    child: Text('ADD', style: _biggerFont),
+                  ),
+                )
+              ]);
+            }));
   }
 
-  _addNewConsumable() {
+  _addNewConsumable(BuildContext context) {
     Consumable preExistingConsumable = this
         .widget
         ._consumablesProvider
         .getAll()
         .firstWhere(
             (consumable) => consumable.name.toLowerCase() == _consumableName,
-            orElse: () => null);
+        orElse: () => null);
 
     if (preExistingConsumable != null) {
       Scaffold.of(context).showSnackBar(new SnackBar(
         content: new Text("This spice already exists!"),
       ));
     } else {
-      this
-          .widget
-          ._consumablesProvider.add(camelize(_consumableName));
-      Navigator.pop(context);
+      this.widget._consumablesProvider.add(camelize(_consumableName));
+      Navigator.pop(this.context);
     }
   }
 }
@@ -103,14 +106,19 @@ class ConsumablesState extends State<Consumables> {
         ]),
         floatingActionButton: FloatingActionButton(
             child: Icon(Icons.add),
-            onPressed: () => pushView(
-                context, AddNewConsumable(this.widget._consumablesProvider))));
+            onPressed: () =>
+                pushView(
+                    context,
+                    AddNewConsumable(this.widget._consumablesProvider))));
   }
 
   Widget _buildList() {
     List<Consumable> consumables;
 
     print("Building consumables list. _searchText=$_searchText");
+    print("No. of consumables: ${this.widget._consumablesProvider
+        .getAll()
+        .length}");
 
     if (_searchText == "") {
       consumables = this.widget._consumablesProvider.getAll();
@@ -136,7 +144,7 @@ class ConsumablesState extends State<Consumables> {
 
   Widget _buildRow(Consumable consumable) {
     final _consumable = consumable;
-    return ListTile(
+    final listTile = ListTile(
         title: Text(
           _consumable.name,
           style: _biggerFont,
@@ -151,6 +159,21 @@ class ConsumablesState extends State<Consumables> {
                     .setSelected(_consumable, selected);
               });
             }));
+
+    return Dismissible(
+      key: Key(consumable.name),
+      onDismissed: (direction) {
+        // Remove the item from our data source.
+        setState(() {
+          this.widget._consumablesProvider.remove(consumable);
+
+//          Scaffold
+//              .of(context)
+//              .showSnackBar(SnackBar(content: Text("Deleted")));
+        });
+      },
+      child: listTile,
+    );
   }
 }
 
@@ -181,7 +204,7 @@ class SelectedConsumablesState extends State<SelectedConsumables> {
 
   Widget _buildList() {
     List<SelectedConsumable> selectedConsumables =
-        this.widget._consumablesProvider.getSelected();
+    this.widget._consumablesProvider.getSelected();
 
     return ListView.builder(
         padding: const EdgeInsets.all(16.0),
